@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>四五教维修报修管理系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Microsoft YaHei", "微软雅黑", sans-serif;
+        }
+
+        body {
+            background-color: #f2f5f9;
+            padding: 0;
+            margin: 0;
+        }
+
+        .header {
+            background-color: #003366;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: clamp(20px, 5vw, 26px);
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        .sub-title {
+            font-size: clamp(12px, 3vw, 14px);
+            margin-top: 6px;
+            opacity: 0.9;
+            font-weight: normal;
+        }
+
+        .nav {
+            background: #004b99;
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav button {
+            background: #005bb5;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: clamp(13px, 3vw, 15px);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .nav button:hover {
+            background: #0073e6;
+            transform: translateY(-1px);
+        }
+
+        .nav .excel {
+            background: #007a33;
+        }
+
+        .nav .excel:hover {
+            background: #009a44;
+        }
+
+        .marquee {
+            background: #ffcc00;
+            color: #003366;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            white-space: nowrap;
+            overflow: hidden;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        .marquee div {
+            display: inline-block;
+            animation: scroll 24s linear infinite;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #003366;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h3 {
+            color: #003366;
+            margin-bottom: 15px;
+            font-size: clamp(16px, 4vw, 18px);
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: clamp(13px, 3vw, 14px);
+            transition: border 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: #005bb5;
+            outline: none;
+        }
+
+        button {
+            background-color: #005bb5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: clamp(13px, 3vw, 14px);
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: #0073e6;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .img-box {
+            width: 100%;
+            height: 160px;
+            border: 2px dashed #005bb5;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            cursor: pointer;
+            margin-bottom: 12px;
+            background: #f9fbfd;
+            transition: border 0.2s;
+        }
+
+        .img-box:hover {
+            border-color: #0073e6;
+        }
+
+        .img-box img {
+            max-height: 150px;
+            max-width: 95%;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .img-box .text {
+            color: #005bb5;
+            font-size: clamp(12px, 3vw, 14px);
+        }
+
+        .item {
+            border-left: 4px solid #005bb5;
+            background: #fafbfc;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+        }
+
+        .item.done {
+            border-left-color: #007a33;
+            background: #f8fffa;
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 200px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .loading {
+            display: none;
+            color: #005bb5;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: -8px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    四五教维修报修管理系统
+    <div class="sub-title">学院内部专用 | 设施维修 | 统一管理</div>
+</div>
+
+<div class="marquee">
+    <div id="msg"></div>
+</div>
+
+<div class="nav">
+    <button onclick="go('home')">首页统计</button>
+    <button onclick="go('add')">我要报修</button>
+    <button onclick="go('fix')">维修处理</button>
+    <button onclick="go('score')">评价管理</button>
+    <button class="excel" onclick="exportExcel()">导出 Excel 报表</button>
+</div>
+
+<div class="container">
+
+    <div class="page active" id="home">
+        <div class="card">
+            <h3>维修数据实时统计</h3>
+            <div id="stats" style="font-size:clamp(14px, 3vw, 16px);line-height:1.8"></div>
+        </div>
+    </div>
+
+    <div class="page" id="add">
+        <div class="card">
+            <h3>报修信息登记</h3>
+            <input id="name" placeholder="报修人姓名" required>
+            <input id="phone" placeholder="联系电话" required>
+            <div class="error" id="phoneErr"></div>
+            <select id="type" required>
+                <option value="水电">水电</option>
+                <option value="门窗">门窗</option>
+                <option value="白蚁">白蚁</option>
+                <option value="墙体">墙体</option>
+                <option value="其他">其他</option>
+            </select>
+            <input id="addr" placeholder="位置（门牌号/教室号）" required>
+            <textarea id="content" rows="4" placeholder="详细故障描述" required></textarea>
+
+            <div class="img-box" id="imgBox" onclick="document.getElementById('imgFile').click()">
+                <div class="text">点击上传现场照片（支持拍照/相册）</div>
+                <img id="previewImg">
+            </div>
+            <input type="file" id="imgFile" accept="image/*" capture="camera" style="display:none" required>
+
+            <button onclick="submit()" id="submitBtn">提交报修</button>
+            <div class="loading" id="loading">提交中...</div>
+        </div>
+    </div>
+
+    <div class="page" id="fix">
+        <div class="card">
+            <h3>待维修 / 已完成项目</h3>
+            <div id="fixList"></div>
+        </div>
+    </div>
+
+    <div class="page" id="score">
+        <div class="card">
+            <h3>维修结果评价</h3>
+            <div id="scoreList"></div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("wuxiu")) || []
+
+function go(id) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+    document.getElementById(id).classList.add('active')
+    if (id === 'home') renderHome()
+    if (id === 'fix') renderFix()
+    if (id === 'score') renderScore()
+}
+
+// 手机号校验
+document.getElementById('phone').addEventListener('input', function(e) {
+    const phone = e.target.value
+    const err = document.getElementById('phoneErr')
+    if (phone && !/^1[3-9]\d{9}$/.test(phone)) {
+        err.textContent = '请输入正确的11位手机号'
+    } else {
+        err.textContent = ''
+    }
+})
+
+// 图片预览
+document.getElementById('imgFile').addEventListener('change', function(e) {
+    let file = e.target.files[0]
+    if (!file) return
+    let reader = new FileReader()
+    reader.onload = function(e) {
+        document.getElementById('previewImg').src = e.target.result
+        document.getElementById('previewImg').style.display = 'block'
+        document.querySelector('.img-box .text').style.display = 'none'
+    }
+    reader.readAsDataURL(file)
+})
+
+function submit() {
+    const name = document.getElementById('name').value
+    const phone = document.getElementById('phone').value
+    const type = document.getElementById('type').value
+    const addr = document.getElementById('addr').value
+    const content = document.getElementById('content').value
+    const file = document.getElementById('imgFile').files[0]
+    const submitBtn = document.getElementById('submitBtn')
+    const loading = document.getElementById('loading')
+    const phoneErr = document.getElementById('phoneErr')
+
+    if (!name || !phone || !addr || !content || !file) {
+        alert("请填写完整信息并上传现场图片")
+        return
+    }
+    if (!/^1[3-9]\d{9}$/.test(phone)) {
+        phoneErr.textContent = '请输入正确的11位手机号'
+        return
+    }
+
+    submitBtn.disabled = true
+    loading.style.display = 'block'
+
+    let reader = new FileReader()
+    reader.onload = e => {
+        data.unshift({
+            id: Date.now(),
+            name, phone, type, addr, content,
+            img: e.target.result,
+            status: "待维修",
+            start: new Date().toLocaleString(),
+            end: "",
+            finishImg: "",
+            score: "未评价"
+        })
+        localStorage.setItem("wuxiu", JSON.stringify(data))
+        
+        setTimeout(() => {
+            alert("报修提交成功！")
+            go('home')
+            // 清空表单
+            document.getElementById('name').value = ''
+            document.getElementById('phone').value = ''
+            document.getElementById('addr').value = ''
+            document.getElementById('content').value = ''
+            document.getElementById('imgFile').value = ''
+            document.getElementById('previewImg').style.display = 'none'
+            document.querySelector('.img-box .text').style.display = 'block'
+            phoneErr.textContent = ''
+            submitBtn.disabled = false
+            loading.style.display = 'none'
+        }, 800)
+    }
+    reader.readAsDataURL(file)
+}
+
+function renderHome() {
+    let total = data.length
+    let done = data.filter(i => i.status === "已完成").length
+    let ing = data.filter(i => i.status === "待维修").length
+
+    let html = ` 报修总数：${total}｜待维修：${ing}｜已完成：${done} ｜ `
+    data.forEach(i => {
+        let day = i.end ? ((new Date(i.end) - new Date(i.start)) / 86400000).toFixed(1) : "进行中"
+        html += `【${i.addr}】${i.status}｜响应${day}天｜评价：${i.score} ｜ `
+    })
+
+    document.getElementById('msg').innerText = html
+    document.getElementById('stats').innerHTML = `
+        <p>✅ 已报修项目：${total} 项</p>
+        <p>✅ 已完成维修：${done} 项</p>
+        <p>✅ 平均响应时间系统自动计算</p>
+    `
+}
+
+function renderFix() {
+    let dom = document.getElementById('fixList')
+    dom.innerHTML = ''
+    data.forEach(i => {
+        let div = document.createElement('div')
+        div.className = 'item ' + (i.status === '已完成' ? 'done' : '')
+        div.innerHTML = `
+            <p><strong>位置：${i.addr}</strong>｜类型：${i.type}｜状态：${i.status}</p>
+            <p>报修人：${i.name} ${i.phone}</p>
+            <p>内容：${i.content}</p>
+            <img src="${i.img}">
+            ${i.status === "待维修" ? `
+                <input type="file" class="finimg" data-id="${i.id}" accept="image/*" style="margin-top:10px">
+                <button onclick="finish(${i.id})" style="margin-top:8px">确认维修完成</button>
+            ` : `<p style="margin-top:10px;font-weight:bold">完工照片：</p><img src="${i.finishImg}">`}
+        `
+        dom.appendChild(div)
+    })
+}
+
+function finish(id) {
+    let item = data.find(i => i.id === id)
+    let inp = document.querySelector(`.finimg[data-id="${id}"]`)
+    if (!inp.files[0]) {
+        alert("请上传维修完成照片")
+        return
+    }
+    let reader = new FileReader()
+    reader.onload = e => {
+        item.status = "已完成"
+        item.end = new Date().toLocaleString()
+        item.finishImg = e.target.result
+        localStorage.setItem("wuxiu", JSON.stringify(data))
+        renderFix()
+    }
+    reader.readAsDataURL(inp.files[0])
+}
+
+function renderScore() {
+    let dom = document.getElementById('scoreList')
+    dom.innerHTML = ''
+    data.filter(i => i.status === "已完成").forEach(i => {
+        let div = document.createElement('div')
+        div.className = 'item'
+        div.innerHTML = `
+            <p><strong>${i.addr}｜${i.type}</strong></p>
+            <input class="sc" data-id="${i.id}" placeholder="请输入评价：满意/一般/差" value="${i.score}">
+            <button onclick="saveScore(${i.id})">保存评价</button>
+        `
+        dom.appendChild(div)
+    })
+}
+
+function saveScore(id) {
+    let val = document.querySelector(`.sc[data-id="${id}"]`).value
+    if (!val) {
+        alert("请输入评价内容")
+        return
+    }
+    data.find(i => i.id === id).score = val
+    localStorage.setItem("wuxiu", JSON.stringify(data))
+    alert("评价保存成功")
+}
+
+function exportExcel() {
+    if (data.length === 0) {
+        alert("暂无数据可导出")
+        return
+    }
+    let csv = "报修人,联系电话,类型,位置,故障描述,状态,报修时间,完成时间,评价\n"
+    data.forEach(i => {
+        let content = i.content.replace(/,/g, "，")
+        csv += `${i.name},${i.phone},${i.type},${i.addr},${content},${i.status},${i.start},${i.end},${i.score}\n`
+    })
+    let blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" })
+    let url = URL.createObjectURL(blob)
+    let a = document.createElement("a")
+    a.href = url
+    a.download = "四五教维修记录_" + new Date().toLocaleDateString() + ".csv"
+    a.click()
+}
+
+go('home')
+</script>
+</body>
+</html>
