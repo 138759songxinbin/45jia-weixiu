@@ -1,16 +1,40 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>四五教维修报修管理系统</title>
+    <meta charset="utf-8">
+    <title>四五教维修报修</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        html,body{height:100%;background:#f2f5f9}
-        iframe{width:100%;height:100%;border:none}
+        body{padding:20px; font-family:微软雅黑;}
+        input,textarea{width:100%; margin:5px 0; padding:8px;}
+        button{padding:10px 20px; background:#07c; color:white; border:none;}
     </style>
 </head>
 <body>
-    <!-- 永久不变 ↓ 只改这里 -->
-    <iframe src="系统核心.html"></iframe>
+    <h2>四五教维修报修系统</h2>
+    姓名：<input id="name"><br>
+    电话：<input id="phone"><br>
+    地点：<input id="place"><br>
+    问题：<textarea id="content"></textarea><br>
+    <button onclick="submit()">提交报修</button>
+
+    <script>
+        async function submit(){
+            const name = document.getElementById("name").value;
+            const phone = document.getElementById("phone").value;
+            const place = document.getElementById("place").value;
+            const content = document.getElementById("content").value;
+
+            await fetch("https://jsonblob.com/api/jsonBlob/1111111111111111111", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    list: JSON.parse(localStorage.getItem("list") || "[]").concat({
+                        name, phone, place, content, time: new Date().toLocaleString()
+                    })
+                })
+            });
+            alert("报修成功！");
+        }
+    </script>
 </body>
 </html>
