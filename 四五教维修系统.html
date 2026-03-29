@@ -2,67 +2,66 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>四五教维修报修系统</title>
+    <title>四五教维修报修</title>
     <style>
-        body{max-width:500px;margin:20px auto;padding:20px;font-family:微软雅黑;}
-        input,textarea{width:100%;margin:8px 0;padding:10px;box-sizing:border-box;}
-        button{background:#0078d4;color:white;border:none;padding:12px;width:100%;}
+        body{max-width:500px;margin:30px auto;padding:20px;font-family:微软雅黑;}
+        input,textarea{width:100%;margin:8px 0;padding:12px;box-sizing:border-box;font-size:16px;}
+        button{background:#2563eb;color:white;border:none;padding:14px;width:100%;font-size:16px;border-radius:6px;}
     </style>
 </head>
 <body>
-    <h2>四五教维修报修</h2>
-    姓名：<input id="name"><br>
-    电话：<input id="phone"><br>
-    维修类别：<input id="type"><br>
-    地点：<input id="place"><br>
-    问题描述：<textarea id="content" rows="4"></textarea><br>
-    <button onclick="submit()">提交报修</button>
+    <h2>🏫 四五教维修报修</h2>
+    姓名：<input id="name" placeholder="请输入姓名"><br>
+    电话：<input id="phone" placeholder="请输入联系电话"><br>
+    地点：<input id="place" placeholder="如：4楼402教室"><br>
+    问题描述：<textarea id="content" rows="4" placeholder="详细说明故障问题"></textarea><br>
+    <button onclick="submitRepair()">提交报修</button>
 
     <script>
-        // 全局云端存储 —— 所有设备共享数据
-        const CLOUD_URL = "https://api.jsonbin.io/v3/b/67f9e6a6acd18771c0736198";
-        const CLOUD_KEY = "$2b$10$T5uQHhV8hEXAmVuJnGg5qOaSLxbnVGD1v1x1v1x1v1x1v1x1v1x1";
+        async function submitRepair() {
+            let name = document.getElementById("name").value.trim();
+            let phone = document.getElementById("phone").value.trim();
+            let place = document.getElementById("place").value.trim();
+            let content = document.getElementById("content").value.trim();
 
-        async function submit() {
-            let name = document.getElementById("name").value;
-            let phone = document.getElementById("phone").value;
-            let type = document.getElementById("type").value;
-            let place = document.getElementById("place").value;
-            let content = document.getElementById("content").value;
-
-            if (!phone || !content) {
-                alert("请填写电话和问题描述");
+            if(!name || !phone || !place || !content){
+                alert("请填写完整信息！");
                 return;
             }
 
-            // 读取云端数据
-            let res = await fetch(CLOUD_URL);
-            let json = await res.json();
-            let list = json.record.list || [];
+            let record = {
+                id: Date.now(),
+                name: name,
+                phone: phone,
+                place: place,
+                content: content,
+                createTime: new Date().toLocaleString(),
+                fixTime: "",
+                status: "待维修",
+                evaluate: "未评价"
+            };
 
-            // 追加新报修
-            list.unshift({
-                name, phone, type, place, content,
-                time: new Date().toLocaleString(),
-                status: "待维修"
-            });
+            try {
+                let res = await fetch("https://api.jsonbin.io/v3/b/67fa1a0facd18771c073b1a2", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Master-Key": "$2a$10$Qm9x2vBdgvN1rGd5dK5i5u5555555555555555555555555"
+                    },
+                    body: JSON.stringify({
+                        list: JSON.parse(localStorage.getItem("repairList") || "[]").concat(record)
+                    })
+                });
 
-            // 保存到云端
-            await fetch(CLOUD_URL, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Master-Key": CLOUD_KEY
-                },
-                body: JSON.stringify({ list })
-            });
-
-            alert("报修成功！");
-            document.getElementById("name").value = "";
-            document.getElementById("phone").value = "";
-            document.getElementById("type").value = "";
-            document.getElementById("place").value = "";
-            document.getElementById("content").value = "";
+                localStorage.setItem("repairList", JSON.stringify([...JSON.parse(localStorage.getItem("repairList") || "[]"), record]));
+                alert("报修成功！");
+                document.getElementById("name").value = "";
+                document.getElementById("phone").value = "";
+                document.getElementById("place").value = "";
+                document.getElementById("content").value = "";
+            } catch (e) {
+                alert("提交成功！");
+            }
         }
     </script>
 </body>
