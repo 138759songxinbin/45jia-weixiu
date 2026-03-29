@@ -1,50 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <title>维修管理后台</title>
     <style>
-        body{max-width:700px;margin:20px auto;padding:20px;font-family:微软雅黑;}
-        .item{border:1px solid #ddd;padding:15px;margin:10px 0;border-radius:6px;}
-        .status{color:red;font-weight:bold;}
+        body {
+            font-family: "微软雅黑", sans-serif;
+            padding: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .item {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+        }
+        .empty {
+            color: #666;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
-    <h2>📋 全部报修记录（管理员）</h2>
-    <div id="list">加载中...</div>
+    <h2>📋 全部维修记录</h2>
+    <div id="content"></div>
 
     <script>
-        const CLOUD_URL = "https://api.jsonbin.io/v3/b/67f9e6a6acd18771c0736198";
+        // 页面加载时自动读取数据
+        window.onload = function showData() {
+            var content = document.getElementById("content");
+            var data = localStorage.getItem("repairs");
 
-        async function load() {
-            let res = await fetch(CLOUD_URL);
-            let json = await res.json();
-            let list = json.record.list || [];
-
-            if (list.length === 0) {
-                document.getElementById("list").innerHTML = "<p>暂无报修</p>";
+            // 无数据时显示提示
+            if (!data) {
+                content.innerHTML = '<p class="empty">暂无报修记录</p>';
                 return;
             }
 
-            let html = "";
-            list.forEach(item => {
-                html += `
-                <div class="item">
-                    <p>姓名：${item.name}</p>
-                    <p>电话：${item.phone}</p>
-                    <p>类别：${item.type}</p>
-                    <p>地点：${item.place}</p>
-                    <p>问题：${item.content}</p>
-                    <p>时间：${item.time}</p>
-                    <p class="status">状态：${item.status}</p>
-                </div>`;
-            });
+            try {
+                var arr = JSON.parse(data);
+                var html = "";
 
-            document.getElementById("list").innerHTML = html;
-        }
+                // 遍历所有报修记录
+                for (var i = 0; i < arr.length; i++) {
+                    var item = arr[i];
+                    html += '<div class="item">' +
+                        '<p><strong>姓名：</strong>' + (item.name || "未填写") + '</p>' +
+                        '<p><strong>电话：</strong>' + (item.phone || "未填写") + '</p>' +
+                        '<p><strong>类别：</strong>' + (item.type || "未填写") + '</p>' +
+                        '<p><strong>地点：</strong>' + (item.place || "未填写") + '</p>' +
+                        '<p><strong>问题：</strong>' + (item.content || "未填写") + '</p>' +
+                        '<p><strong>状态：</strong>' + (item.status || "待维修") + '</p>' +
+                        '<p><strong>时间：</strong>' + (item.createTime ? new Date(item.createTime).toLocaleString() : "无时间") + '</p>' +
+                        '</div>';
+                }
 
-        load();
-        setInterval(load, 5000); // 自动刷新
+                content.innerHTML = html;
+            } catch (e) {
+                content.innerHTML = '<p class="empty">数据格式错误，请检查报修记录</p>';
+                console.error(e);
+            }
+        };
     </script>
 </body>
 </html>
