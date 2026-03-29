@@ -1,68 +1,61 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>维修管理后台</title>
+    <title>维修管理总后台</title>
     <style>
-        body {
-            font-family: "微软雅黑", sans-serif;
-            padding: 20px;
-            max-width: 700px;
-            margin: 0 auto;
-        }
-        .item {
-            border: 1px solid #eee;
-            padding: 15px;
-            margin: 10px 0;
-            border-radius: 6px;
-        }
-        .empty {
-            color: #666;
-            text-align: center;
-            padding: 20px;
-        }
+        body{max-width:900px;margin:30px auto;padding:20px;font-family:微软雅黑;}
+        .item{border:1px solid #ddd;padding:20px;margin:12px 0;border-radius:8px;background:#fff;}
+        .wait{color:red;font-weight:bold;}
+        .success{color:green;font-weight:bold;}
+        h2{color:#2563eb;}
     </style>
 </head>
 <body>
-    <h2>📋 全部维修记录</h2>
-    <div id="content"></div>
+    <h2>📋 全校维修记录总表（全局汇总）</h2>
+    <div id="listBox">加载中...</div>
 
     <script>
-        // 页面加载时自动读取数据
-        window.onload = function showData() {
-            var content = document.getElementById("content");
-            var data = localStorage.getItem("repairs");
+        async function loadAllData() {
+            let box = document.getElementById("listBox");
+            let localData = JSON.parse(localStorage.getItem("repairList") || "[]");
 
-            // 无数据时显示提示
-            if (!data) {
-                content.innerHTML = '<p class="empty">暂无报修记录</p>';
+            try {
+                let res = await fetch("https://api.jsonbin.io/v3/b/67fa1a0facd18771c073b1a2");
+                let json = await res.json();
+                let cloudList = json.record.list || [];
+                showList([...cloudList, ...localData]);
+            } catch (e) {
+                showList(localData);
+            }
+        }
+
+        function showList(list) {
+            let box = document.getElementById("listBox");
+            if (list.length === 0) {
+                box.innerHTML = "<p>暂无报修记录</p>";
                 return;
             }
 
-            try {
-                var arr = JSON.parse(data);
-                var html = "";
+            let html = "";
+            list.reverse().forEach(item => {
+                html += `
+                <div class="item">
+                    <p>🧑‍💼 报修人：${item.name}</p>
+                    <p>📞 电话：${item.phone}</p>
+                    <p>📍 地点：${item.place}</p>
+                    <p>🔧 问题：${item.content}</p>
+                    <p>⏰ 报修时间：${item.createTime}</p>
+                    <p>🛠️ 维修时间：${item.fixTime || "未维修"}</p>
+                    <p class="${item.status==='待维修'?'wait':'success'}">状态：${item.status}</p>
+                    <p>⭐ 评价：${item.evaluate}</p>
+                </div>`;
+            });
+            box.innerHTML = html;
+        }
 
-                // 遍历所有报修记录
-                for (var i = 0; i < arr.length; i++) {
-                    var item = arr[i];
-                    html += '<div class="item">' +
-                        '<p><strong>姓名：</strong>' + (item.name || "未填写") + '</p>' +
-                        '<p><strong>电话：</strong>' + (item.phone || "未填写") + '</p>' +
-                        '<p><strong>类别：</strong>' + (item.type || "未填写") + '</p>' +
-                        '<p><strong>地点：</strong>' + (item.place || "未填写") + '</p>' +
-                        '<p><strong>问题：</strong>' + (item.content || "未填写") + '</p>' +
-                        '<p><strong>状态：</strong>' + (item.status || "待维修") + '</p>' +
-                        '<p><strong>时间：</strong>' + (item.createTime ? new Date(item.createTime).toLocaleString() : "无时间") + '</p>' +
-                        '</div>';
-                }
-
-                content.innerHTML = html;
-            } catch (e) {
-                content.innerHTML = '<p class="empty">数据格式错误，请检查报修记录</p>';
-                console.error(e);
-            }
-        };
+        window.onload = loadAllData;
+        setInterval(loadAllData, 5000);
     </script>
 </body>
 </html>
