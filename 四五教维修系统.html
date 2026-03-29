@@ -1,39 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>四五教维修报修</title>
+    <meta charset="UTF-8">
+    <title>四五教维修报修系统</title>
     <style>
-        body{padding:20px; font-family:微软雅黑;}
-        input,textarea{width:100%; margin:5px 0; padding:8px;}
-        button{padding:10px 20px; background:#07c; color:white; border:none;}
+        body{max-width:500px;margin:20px auto;padding:20px;font-family:微软雅黑;}
+        input,textarea{width:100%;margin:8px 0;padding:10px;box-sizing:border-box;}
+        button{background:#0078d4;color:white;border:none;padding:12px;width:100%;}
     </style>
 </head>
 <body>
-    <h2>四五教维修报修系统</h2>
+    <h2>四五教维修报修</h2>
     姓名：<input id="name"><br>
     电话：<input id="phone"><br>
+    维修类别：<input id="type"><br>
     地点：<input id="place"><br>
-    问题：<textarea id="content"></textarea><br>
+    问题描述：<textarea id="content" rows="4"></textarea><br>
     <button onclick="submit()">提交报修</button>
 
     <script>
-        async function submit(){
-            const name = document.getElementById("name").value;
-            const phone = document.getElementById("phone").value;
-            const place = document.getElementById("place").value;
-            const content = document.getElementById("content").value;
+        // 全局云端存储 —— 所有设备共享数据
+        const CLOUD_URL = "https://api.jsonbin.io/v3/b/67f9e6a6acd18771c0736198";
+        const CLOUD_KEY = "$2b$10$T5uQHhV8hEXAmVuJnGg5qOaSLxbnVGD1v1x1v1x1v1x1v1x1v1x1";
 
-            await fetch("https://jsonblob.com/api/jsonBlob/1111111111111111111", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    list: JSON.parse(localStorage.getItem("list") || "[]").concat({
-                        name, phone, place, content, time: new Date().toLocaleString()
-                    })
-                })
+        async function submit() {
+            let name = document.getElementById("name").value;
+            let phone = document.getElementById("phone").value;
+            let type = document.getElementById("type").value;
+            let place = document.getElementById("place").value;
+            let content = document.getElementById("content").value;
+
+            if (!phone || !content) {
+                alert("请填写电话和问题描述");
+                return;
+            }
+
+            // 读取云端数据
+            let res = await fetch(CLOUD_URL);
+            let json = await res.json();
+            let list = json.record.list || [];
+
+            // 追加新报修
+            list.unshift({
+                name, phone, type, place, content,
+                time: new Date().toLocaleString(),
+                status: "待维修"
             });
+
+            // 保存到云端
+            await fetch(CLOUD_URL, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Master-Key": CLOUD_KEY
+                },
+                body: JSON.stringify({ list })
+            });
+
             alert("报修成功！");
+            document.getElementById("name").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("type").value = "";
+            document.getElementById("place").value = "";
+            document.getElementById("content").value = "";
         }
     </script>
 </body>
