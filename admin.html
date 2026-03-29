@@ -1,55 +1,50 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>四五教维修管理后台</title>
+    <title>维修管理后台</title>
     <style>
-        body { max-width: 800px; margin: 20px auto; padding: 20px; font-family: "微软雅黑", sans-serif; }
-        .repair-item { border: 1px solid #eee; padding: 15px; margin: 10px 0; border-radius: 8px; }
-        .done { background-color: #e8f5e9; }
-        .status { font-weight: bold; }
-        button { padding: 6px 12px; margin-left: 10px; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-done { background-color: #4caf50; color: white; }
-        .btn-done:disabled { background-color: #ccc; cursor: not-allowed; }
+        body{max-width:700px;margin:20px auto;padding:20px;font-family:微软雅黑;}
+        .item{border:1px solid #ddd;padding:15px;margin:10px 0;border-radius:6px;}
+        .status{color:red;font-weight:bold;}
     </style>
 </head>
 <body>
-    <h2>📋 四五教维修报修记录（管理员后台）</h2>
-    <div id="repair-list">
-        <p>加载中...</p>
-    </div>
+    <h2>📋 全部报修记录（管理员）</h2>
+    <div id="list">加载中...</div>
 
     <script>
-        // 完全兼容你原来的存储结构，不丢任何数据！
-        function loadAllRepairs() {
-            const list = document.getElementById("repair-list");
-            list.innerHTML = "";
+        const CLOUD_URL = "https://api.jsonbin.io/v3/b/67f9e6a6acd18771c0736198";
 
-            // 读取你原来系统的所有数据
-            const repairs = JSON.parse(localStorage.getItem("repairs") || "[]");
+        async function load() {
+            let res = await fetch(CLOUD_URL);
+            let json = await res.json();
+            let list = json.record.list || [];
 
-            if (repairs.length === 0) {
-                list.innerHTML = "<p>暂无报修记录</p>";
+            if (list.length === 0) {
+                document.getElementById("list").innerHTML = "<p>暂无报修</p>";
                 return;
             }
 
-            repairs.reverse().forEach((item, index) => {
-                const itemDiv = document.createElement("div");
-                itemDiv.className = "repair-item";
-                itemDiv.innerHTML = `
-                    <p><strong>姓名：</strong>${item.name || "匿名"}</p>
-                    <p><strong>电话：</strong>${item.phone}</p>
-                    <p><strong>类别：</strong>${item.type || "未分类"}</p>
-                    <p><strong>地点：</strong>${item.place}</p>
-                    <p><strong>问题：</strong>${item.content}</p>
-                    <p><strong>时间：</strong>${new Date(item.createTime).toLocaleString()}</p>
-                    <p class="status">状态：${item.status || "待维修"}</p>
-                `;
-                list.appendChild(itemDiv);
+            let html = "";
+            list.forEach(item => {
+                html += `
+                <div class="item">
+                    <p>姓名：${item.name}</p>
+                    <p>电话：${item.phone}</p>
+                    <p>类别：${item.type}</p>
+                    <p>地点：${item.place}</p>
+                    <p>问题：${item.content}</p>
+                    <p>时间：${item.time}</p>
+                    <p class="status">状态：${item.status}</p>
+                </div>`;
             });
+
+            document.getElementById("list").innerHTML = html;
         }
 
-        window.onload = loadAllRepairs;
+        load();
+        setInterval(load, 5000); // 自动刷新
     </script>
 </body>
 </html>
