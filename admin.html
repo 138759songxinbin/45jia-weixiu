@@ -2,51 +2,39 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>维修管理总后台</title>
+    <title>维修记录总表</title>
     <style>
         body{max-width:900px;margin:30px auto;padding:20px;font-family:微软雅黑;}
         .item{border:1px solid #ddd;padding:20px;margin:12px 0;border-radius:8px;background:#fff;}
         .wait{color:red;font-weight:bold;}
         .success{color:green;font-weight:bold;}
-        .photo-preview{max-width:180px;margin-top:10px;}
     </style>
 </head>
 <body>
     <h2>📋 维修记录总表</h2>
     <div id="listBox">加载中...</div>
-
     <script>
         function loadAllData() {
             let box = document.getElementById("listBox");
-            // 同时读取新旧两套数据，保证不丢失
-            let oldList = JSON.parse(localStorage.getItem("repairs") || "[]");
-            let newList = JSON.parse(localStorage.getItem("repairList") || "[]");
-            let list = [...oldList, ...newList];
-
-            if (list.length === 0) {
-                box.innerHTML = "<p>暂无报修记录</p>";
-                return;
-            }
-
+            let list = JSON.parse(localStorage.getItem("repairList") || "[]");
+            if (list.length === 0) { box.innerHTML = "<p>暂无报修记录</p>"; return; }
             let html = "";
             list.reverse().forEach(item => {
                 html += `
                 <div class="item">
-                    <p>🧑‍💼 报修人：${item.name || "未填写"}</p>
-                    <p>📞 电话：${item.phone || "未填写"}</p>
-                    <p>📍 地点：${item.place || "未填写"}</p>
-                    <p>🏷️ 类型：${item.type || "未分类"}</p>
-                    <p>🔧 问题：${item.content || "未填写"}</p>
-                    ${item.photo ? `<p>📷 照片：<img src="${item.photo}" class="photo-preview"></p>` : ""}
-                    <p>⏰ 报修时间：${item.createTime ? new Date(item.createTime).toLocaleString() : "无时间"}</p>
+                    <p>🧑‍💼 报修人：${item.name}</p>
+                    <p>📞 电话：${item.phone}</p>
+                    <p>📍 地点：${item.place}</p>
+                    <p>🏷️ 类型：${item.type}</p>
+                    <p>🔧 问题：${item.content}</p>
+                    <p>⏰ 报修时间：${item.createTime}</p>
                     <p>🛠️ 维修时间：${item.fixTime || "未维修"}</p>
-                    <p class="${item.status==='待维修'?'wait':'success'}">状态：${item.status || "待维修"}</p>
-                    <p>⭐ 评价：${item.evaluate || "未评价"}</p>
+                    <p class="${item.status==='待维修'?'wait':'success'}">状态：${item.status}</p>
+                    <p>⭐ 评价：${item.evaluate}</p>
                 </div>`;
             });
             box.innerHTML = html;
         }
-
         window.onload = loadAllData;
         setInterval(loadAllData, 5000);
     </script>
