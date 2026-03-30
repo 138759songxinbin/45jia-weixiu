@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,11 +15,9 @@
 </head>
 <body>
     <h2>🏫 四五教维修报修</h2>
-
     姓名：<input id="name" placeholder="请输入姓名"><br>
     电话：<input id="phone" placeholder="请输入联系电话"><br>
     地点：<input id="place" placeholder="如：4楼402教室"><br>
-
     维修类型：
     <select id="type">
         <option value="">请选择维修类型</option>
@@ -31,21 +28,16 @@
         <option value="蚊虫">蚊虫</option>
         <option value="建筑安全">建筑安全</option>
     </select><br>
-
     问题描述：<textarea id="content" rows="4" placeholder="详细说明故障问题"></textarea><br>
-
     上传照片（非必填）：<input type="file" id="photo" accept="image/*"><br>
     <p class="photo-tip">可选择上传现场照片</p>
-
     <button onclick="submitRepair()">提交报修</button>
-
     <div class="scroll-record">
         <h3>📋 最新维修记录</h3>
         <div class="scroll-box" id="scrollBox">
-            <p>加载中...</p>
+            <p>暂无报修记录</p>
         </div>
     </div>
-
     <script>
         function submitRepair() {
             let name = document.getElementById("name").value.trim();
@@ -53,27 +45,15 @@
             let place = document.getElementById("place").value.trim();
             let type = document.getElementById("type").value;
             let content = document.getElementById("content").value.trim();
-
-            if(!name || !phone || !place || !type || !content){
-                alert("请填写完整信息！");
-                return;
-            }
-
+            if(!name || !phone || !place || !type || !content){ alert("请填写完整信息！"); return; }
             let record = {
-                name: name,
-                phone: phone,
-                place: place,
-                type: type,
-                content: content,
+                id: Date.now(), name, phone, place, type, content,
                 createTime: new Date().toLocaleString(),
-                status: "待维修"
+                status: "待维修", fixTime: "", evaluate: "未评价"
             };
-
-            // 读取 旧数据 保存
-            let list = JSON.parse(localStorage.getItem("repairs") || "[]");
+            let list = JSON.parse(localStorage.getItem("repairList") || "[]");
             list.push(record);
-            localStorage.setItem("repairs", JSON.stringify(list));
-
+            localStorage.setItem("repairList", JSON.stringify(list));
             alert("报修成功！");
             document.getElementById("name").value = "";
             document.getElementById("phone").value = "";
@@ -82,24 +62,16 @@
             document.getElementById("content").value = "";
             loadScrollRecords();
         }
-
-        // 读取旧数据显示
         function loadScrollRecords(){
             let box = document.getElementById("scrollBox");
-            let list = JSON.parse(localStorage.getItem("repairs") || "[]");
+            let list = JSON.parse(localStorage.getItem("repairList") || "[]");
             let html = "";
-            if(list.length === 0){
-                box.innerHTML = "<p>暂无报修记录</p>";
-                return;
-            }
+            if(list.length === 0){ box.innerHTML = "<p>暂无报修记录</p>"; return; }
             list.slice(-10).reverse().forEach(item => {
-                html += `<div class="scroll-item">
-                    ${item.createTime} | ${item.place} | ${item.type} | <span style="color:red">${item.status}</span>
-                </div>`;
+                html += `<div class="scroll-item">${item.createTime} | ${item.place} | ${item.type} | <span style="color:red">${item.status}</span></div>`;
             });
             box.innerHTML = html;
         }
-
         window.onload = loadScrollRecords;
         setInterval(loadScrollRecords, 5000);
     </script>
