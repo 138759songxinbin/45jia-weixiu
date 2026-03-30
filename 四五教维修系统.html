@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,7 +11,6 @@
         .photo-tip{font-size:14px;color:#666;margin:4px 0 12px;}
         .scroll-record{margin-top:30px;border-top:2px solid #eee;padding-top:20px;}
         .scroll-item{padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:14px;}
-        /* 强制显示滚动条 */
         .scroll-box{max-height:200px;overflow-y:auto;border:1px solid #eee;padding:10px;border-radius:6px;}
     </style>
 </head>
@@ -39,7 +39,6 @@
 
     <button onclick="submitRepair()">提交报修</button>
 
-    <!-- 滚动实时维修记录 -->
     <div class="scroll-record">
         <h3>📋 最新维修记录</h3>
         <div class="scroll-box" id="scrollBox">
@@ -48,61 +47,46 @@
     </div>
 
     <script>
-        async function submitRepair() {
+        function submitRepair() {
             let name = document.getElementById("name").value.trim();
             let phone = document.getElementById("phone").value.trim();
             let place = document.getElementById("place").value.trim();
             let type = document.getElementById("type").value;
             let content = document.getElementById("content").value.trim();
-            let photoUrl = "";
 
             if(!name || !phone || !place || !type || !content){
                 alert("请填写完整信息！");
                 return;
             }
 
-            let photoFile = document.getElementById("photo").files[0];
-            if(photoFile){
-                let reader = new FileReader();
-                reader.readAsDataURL(photoFile);
-                reader.onload = function(e){ photoUrl = e.target.result; }
-            }
-
             let record = {
-                id: Date.now(),
                 name: name,
                 phone: phone,
                 place: place,
                 type: type,
                 content: content,
-                photo: photoUrl,
                 createTime: new Date().toLocaleString(),
-                fixTime: "",
-                status: "待维修",
-                evaluate: "未评价"
+                status: "待维修"
             };
 
-            try {
-                let list = JSON.parse(localStorage.getItem("repairList") || "[]");
-                list.push(record);
-                localStorage.setItem("repairList", JSON.stringify(list));
-                alert("报修成功！");
+            // 读取 旧数据 保存
+            let list = JSON.parse(localStorage.getItem("repairs") || "[]");
+            list.push(record);
+            localStorage.setItem("repairs", JSON.stringify(list));
 
-                document.getElementById("name").value = "";
-                document.getElementById("phone").value = "";
-                document.getElementById("place").value = "";
-                document.getElementById("type").value = "";
-                document.getElementById("content").value = "";
-                document.getElementById("photo").value = "";
-                loadScrollRecords();
-            } catch (e) {
-                alert("报修成功！");
-            }
+            alert("报修成功！");
+            document.getElementById("name").value = "";
+            document.getElementById("phone").value = "";
+            document.getElementById("place").value = "";
+            document.getElementById("type").value = "";
+            document.getElementById("content").value = "";
+            loadScrollRecords();
         }
 
+        // 读取旧数据显示
         function loadScrollRecords(){
             let box = document.getElementById("scrollBox");
-            let list = JSON.parse(localStorage.getItem("repairList") || "[]");
+            let list = JSON.parse(localStorage.getItem("repairs") || "[]");
             let html = "";
             if(list.length === 0){
                 box.innerHTML = "<p>暂无报修记录</p>";
@@ -110,7 +94,7 @@
             }
             list.slice(-10).reverse().forEach(item => {
                 html += `<div class="scroll-item">
-                    ${item.createTime} | ${item.place} | ${item.type} | <span style="color:${item.status==='待维修'?'red':'green'}">${item.status}</span>
+                    ${item.createTime} | ${item.place} | ${item.type} | <span style="color:red">${item.status}</span>
                 </div>`;
             });
             box.innerHTML = html;
