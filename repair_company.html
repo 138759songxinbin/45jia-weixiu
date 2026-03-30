@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>维修公司后台 - 待维修项目</title>
+    <style>
+        body{max-width:1000px;margin:30px auto;padding:20px;font-family:微软雅黑;}
+        .repair-item{border:1px solid #ddd;padding:20px;margin:15px 0;border-radius:8px;background:#fff;}
+        .wait{color:red;font-weight:bold;}
+        .done{color:green;font-weight:bold;}
+        .photo-preview{max-width:200px;margin:10px 0;border:1px solid #eee;}
+        button{padding:10px 20px;margin:5px;border:none;border-radius:4px;cursor:pointer;}
+        .btn-done{background:#22c55e;color:white;}
+        .btn-upload{background:#3b82f6;color:white;}
+    </style>
+</head>
+<body>
+    <h2>🔧 维修公司待处理项目</h2>
+    <div id="repairList">加载中...</div>
+
+    <script>
+        // 加载所有待维修项目
+        function loadRepairList() {
+            let box = document.getElementById("repairList");
+            // 读取新旧数据，保证兼容
+            let oldList = JSON.parse(localStorage.getItem("repairs") || "[]");
+            let newList = JSON.parse(localStorage.getItem("repairList") || "[]");
+            let list = [...oldList, ...newList];
+
+            if (list.length === 0) {
+                box.innerHTML = "<p>暂无待维修项目</p>";
+                return;
+            }
+
+            let html = "";
+            list.forEach((item, index) => {
+                html += `
+                <div class="repair-item">
+                    <p><strong>报修时间：</strong>${item.createTime || "无时间"}</p>
+                    <p><strong>报修人：</strong>${item.name || "匿名"}</p>
+                    <p><strong>联系电话：</strong>${item.phone || "无电话"}</p>
+                    <p><strong>维修地点：</strong>${item.place || "无地点"}</p>
+                    <p><strong>维修类型：</strong>${item.type || "未分类"}</p>
+                    <p><strong>问题描述：</strong>${item.content || "无描述"}</p>
+                    ${item.photo ? `<p><strong>现场照片：</strong><img src="${item.photo}" class="photo-preview"></p>` : ""}
+                    <p><strong>当前状态：</strong><span class="${item.status==='待维修'?'wait':'done'}">${item.status || "待维修"}</span></p>
+                    ${item.fixTime ? `<p><strong>维修完成时间：</strong>${item.fixTime}</p>` : ""}
+                    ${item.repairPhoto ? `<p><strong>完工照片：</strong><img src="${item.repairPhoto}" class="photo-preview"></p>` : ""}
+                    
+                    ${item.status !== "已完成" ? `
+                    <div>
+                        <input type="file" id="photo-${index}" accept="image/*" style="display:inline-block;">
+                        <button class="btn-upload" onclick="uploadPhoto(${index})">上传完工照片</button>
+                        <button class="btn-done" onclick="markDone(${index})">标记维修完成</button>
+                    </div>
+                    ` : ""}
+                </div>`;
+            });
+            box.innerHTML = html;
+        }
+
+        // 上传完工照片
+        function uploadPhoto(index) {
+            let input = document.getElementById(`photo-${index}`);
+            let file = input.files[0];
+            if (!file) { alert("请先选择照片！"); return; }
+
+            let reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(e) {
+                let oldList = JSON.parse(localStorage.getItem("repairs") || "[]");
+                let newList = JSON.parse(localStorage.getItem("repairList") || "[]");
+                let list = [...oldList, ...newList];
+                list[index].repairPhoto = e.target.result;
+                localStorage.setItem("repairList", JSON.stringify(list));
+                alert("照片上传成功！");
+                loadRepairList();
+            };
+        }
+
+        // 标记维修完成
+        function markDone(index) {
+            let oldList = JSON.parse(localStorage.getItem("repairs") || "[]");
+            let newList = JSON.parse(localStorage.getItem("repairList") || "[]");
+            let list = [...oldList, ...newList];
+            list[index].status = "已完成";
+            list[index].fixTime = new Date().toLocaleString();
+            localStorage.setItem("repairList", JSON.stringify(list));
+            alert("已标记为维修完成！");
+            loadRepairList();
+        }
+
+        window.onload = loadRepairList;
+        setInterval(loadRepairList, 5000); // 每5秒自动刷新
+    </script>
+</body>
+</html>
