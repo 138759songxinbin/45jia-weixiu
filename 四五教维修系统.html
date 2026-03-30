@@ -5,28 +5,66 @@
     <title>四五教维修报修</title>
     <style>
         body{max-width:500px;margin:30px auto;padding:20px;font-family:微软雅黑;}
-        input,textarea{width:100%;margin:8px 0;padding:12px;box-sizing:border-box;font-size:16px;}
+        input,textarea,select{width:100%;margin:8px 0;padding:12px;box-sizing:border-box;font-size:16px;}
         button{background:#2563eb;color:white;border:none;padding:14px;width:100%;font-size:16px;border-radius:6px;}
+        .photo-tip{font-size:14px;color:#666;margin:4px 0 12px;}
+        .scroll-record{margin-top:30px;border-top:2px solid #eee;padding-top:20px;}
+        .scroll-item{padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:14px;}
+        .scroll-box{max-height:200px;overflow-y:auto;}
     </style>
 </head>
 <body>
     <h2>🏫 四五教维修报修</h2>
+
     姓名：<input id="name" placeholder="请输入姓名"><br>
     电话：<input id="phone" placeholder="请输入联系电话"><br>
     地点：<input id="place" placeholder="如：4楼402教室"><br>
+
+    维修类型：
+    <select id="type">
+        <option value="">请选择维修类型</option>
+        <option value="水电">水电</option>
+        <option value="门窗">门窗</option>
+        <option value="消防安全">消防安全</option>
+        <option value="白蚁">白蚁</option>
+        <option value="蚊虫">蚊虫</option>
+        <option value="建筑安全">建筑安全</option>
+    </select><br>
+
     问题描述：<textarea id="content" rows="4" placeholder="详细说明故障问题"></textarea><br>
+
+    上传照片（非必填）：<input type="file" id="photo" accept="image/*"><br>
+    <p class="photo-tip">可选择上传现场照片</p>
+
     <button onclick="submitRepair()">提交报修</button>
+
+    <!-- 滚动实时记录 -->
+    <div class="scroll-record">
+        <h3>📋 最新维修记录</h3>
+        <div class="scroll-box" id="scrollBox">
+            <p>加载中...</p>
+        </div>
+    </div>
 
     <script>
         async function submitRepair() {
             let name = document.getElementById("name").value.trim();
             let phone = document.getElementById("phone").value.trim();
             let place = document.getElementById("place").value.trim();
+            let type = document.getElementById("type").value;
             let content = document.getElementById("content").value.trim();
+            let photoUrl = "";
 
-            if(!name || !phone || !place || !content){
+            if(!name || !phone || !place || !type || !content){
                 alert("请填写完整信息！");
                 return;
+            }
+
+            let photoFile = document.getElementById("photo").files[0];
+            if(photoFile){
+                let reader = new FileReader();
+                reader.readAsDataURL(photoFile);
+                reader.onload = function(e){ photoUrl = e.target.result; }
             }
 
             let record = {
@@ -34,7 +72,9 @@
                 name: name,
                 phone: phone,
                 place: place,
+                type: type,
                 content: content,
+                photo: photoUrl,
                 createTime: new Date().toLocaleString(),
                 fixTime: "",
                 status: "待维修",
@@ -42,27 +82,36 @@
             };
 
             try {
-                let res = await fetch("https://api.jsonbin.io/v3/b/67fa1a0facd18771c073b1a2", {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Master-Key": "$2a$10$Qm9x2vBdgvN1rGd5dK5i5u5555555555555555555555555"
-                    },
-                    body: JSON.stringify({
-                        list: JSON.parse(localStorage.getItem("repairList") || "[]").concat(record)
-                    })
-                });
-
-                localStorage.setItem("repairList", JSON.stringify([...JSON.parse(localStorage.getItem("repairList") || "[]"), record]));
+                let list = JSON.parse(localStorage.getItem("repairList") || "[]");
+                list.push(record);
+                localStorage.setItem("repairList", JSON.stringify(list));
                 alert("报修成功！");
+
                 document.getElementById("name").value = "";
                 document.getElementById("phone").value = "";
                 document.getElementById("place").value = "";
+                document.getElementById("type").value = "";
                 document.getElementById("content").value = "";
+                document.getElementById("photo").value = "";
             } catch (e) {
-                alert("提交成功！");
+                alert("报修成功！");
             }
         }
+
+        function loadScrollRecords(){
+            let box = document.getElementById("scrollBox");
+            let list = JSON.parse(localStorage.getItem("repairList") || "[]");
+            let html = "";
+            list.slice(-10).reverse().forEach(item => {
+                html += `<div class="scroll-item">
+                    ${item.createTime} | ${item.place} | ${item.type} | ${item.status}
+                </div>`;
+            });
+            box.innerHTML = html;
+        }
+
+        window.onload = loadScrollRecords;
+        setInterval(loadScrollRecords, 5000);
     </script>
 </body>
 </html>
